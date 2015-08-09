@@ -35,19 +35,26 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, LED_STRIP_PIN);
 
 #define THRESH 10
 #define SAMPLES 1000
-
+#define LEDPIN 13
 
 boolean isPressed(CapPin* pin) {
   long total = pin->readPin(SAMPLES);
   return total > THRESH;
+  return false;
 }
 
+#define DEBUG
 
-CapPin cPin_C = CapPin(2);
-CapPin* pins[] = { &cPin_C}; 
+#define CASSERT(X) typedef byte STATIC_ASSERT[X?1:-1]
+
+CapPin pins[] = { CapPin(2), CapPin(3), CapPin(8), CapPin(9), CapPin(10), CapPin(11), CapPin(12), CapPin(A0), CapPin(A1), CapPin(A2), CapPin(A3)};
+
+//CapPin pins[] = { CapPin(2), CapPin(3)};
+
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0])) 
 const int NUM_PINS = ARRAY_SIZE(pins);
 
+//CASSERT(NUM_PINS == 11);
 
 void setup() {
   Serial.begin(115200);
@@ -57,11 +64,23 @@ void setup() {
   ss.begin(9600);
   // can also do Serial1.begin(9600)
 
-  if (!sfx.reset()) {
-    Serial.println("Not found");
-    while (1);
+//  if (!sfx.reset()) {
+//    Serial.println("Not found");
+//    while (1);
+//  }
+//  Serial.println("SFX board found");
+  
+  for (int i = 0; i < NUM_PINS; ++i) {
+#ifdef DEBUG
+  Serial.print("Calibrating pin: ");
+  Serial.println(i);
+#endif
+    pins[i].readPin(SAMPLES);
   }
-  Serial.println("SFX board found");
+  
+  
+  
+  Serial.println("Setup done");
   
 }
 
@@ -72,7 +91,7 @@ bool currentPressed = false;
 void loop() {
   int i;
   for (i = 0; i < NUM_PINS; ++i) {
-    if (isPressed(pins[i])){
+    if (isPressed(pins+i)){
       break;
     }
   }
@@ -82,18 +101,15 @@ void loop() {
   
   if (isButtonPressed && (!currentPressed)) {
     currentPressed = true;
+    digitalWrite(LEDPIN, HIGH);
     // TODO play something
     
-    s
-        if (! sfx.playTrack("T00     OGG") ) {
-        Serial.println("Failed to play track?");
-      } else {
-       Serial.println("good track");
-       
-      } 
+    Serial.print("Button pressed: ");
+    Serial.println(i);
       
-  } else {
+  } else if (!isButtonPressed && (currentPressed)) {
     currentPressed = false;
+    digitalWrite(LEDPIN, LOW);
     
        Serial.println("stop");
   }
