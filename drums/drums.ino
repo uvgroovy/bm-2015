@@ -33,20 +33,27 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, LED_STRIP_PIN);
 
 
 
-#define THRESH 10
+#define THRESH 40
 #define SAMPLES 1000
 #define LEDPIN 13
 
 boolean isPressed(CapPin* pin) {
   long total = pin->readPin(SAMPLES);
+  if (total > THRESH) {
+    Serial.print("Total: ");
+    Serial.println(total);
+  }
   return total > THRESH;
-  return false;
+  
 }
 
 #define DEBUG
 
 #define CASSERT(X) typedef byte STATIC_ASSERT[X?1:-1]
 
+#ifdef DEBUG
+char rawPin[][3] = {"2","3","8","9", "10", "11", "12", "A0", "A1", "A2", "A3"};
+#endif
 CapPin pins[] = { CapPin(2), CapPin(3 ), CapPin(8), CapPin(9), CapPin(10), CapPin(11), CapPin(12), CapPin(A0), CapPin(A1), CapPin(A2), CapPin(A3)};
 enum MAPPING    { TOP_RIGHT, BUTT_RIGHT, MID_MID  , ARR_DOWN , ARR_UP    , MID_LEFT  , BUTT_LEFT , TOP_MIDV  ,TOP_LEFT  , MID_RIGHT , BUTT_MID  };
 //CapPin pins[] = { CapPin(2), CapPin(3)};
@@ -105,8 +112,12 @@ void loop() {
     // TODO play something
     
     work(i);
+    #ifdef DEBUG
     Serial.print("Button pressed: ");
-    Serial.println(i);
+    Serial.print(i);
+    Serial.print(" Pin: ");
+    Serial.println(rawPin[i]);
+    #endif
       
   } else if (!isButtonPressed && (currentPressed)) {
     currentPressed = false;
