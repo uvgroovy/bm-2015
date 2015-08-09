@@ -47,14 +47,14 @@ boolean isPressed(CapPin* pin) {
 
 #define CASSERT(X) typedef byte STATIC_ASSERT[X?1:-1]
 
-CapPin pins[] = { CapPin(2), CapPin(3), CapPin(8), CapPin(9), CapPin(10), CapPin(11), CapPin(12), CapPin(A0), CapPin(A1), CapPin(A2), CapPin(A3)};
-
+CapPin pins[] = { CapPin(2), CapPin(3 ), CapPin(8), CapPin(9), CapPin(10), CapPin(11), CapPin(12), CapPin(A0), CapPin(A1), CapPin(A2), CapPin(A3)};
+enum MAPPING    { TOP_RIGHT, BUTT_RIGHT, MID_MID  , ARR_DOWN , ARR_UP    , MID_LEFT  , BUTT_LEFT , TOP_MIDV  ,TOP_LEFT  , MID_RIGHT , BUTT_MID  };
 //CapPin pins[] = { CapPin(2), CapPin(3)};
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0])) 
 const int NUM_PINS = ARRAY_SIZE(pins);
 
-//CASSERT(NUM_PINS == 11);
+CASSERT(NUM_PINS == 11);
 
 void setup() {
   Serial.begin(115200);
@@ -104,6 +104,7 @@ void loop() {
     digitalWrite(LEDPIN, HIGH);
     // TODO play something
     
+    work(i)
     Serial.print("Button pressed: ");
     Serial.println(i);
       
@@ -115,6 +116,49 @@ void loop() {
   }
   
   animate();
+}
+
+void work(int index) {
+ 
+ switch(index) {
+  case  TOP_RIGHT:
+  
+  break;
+  case BUTT_LEFT:
+  
+  break;
+  case  MID_MID:
+  
+  break;
+  case  ARR_DOWN:
+  
+  break;
+  case ARR_UP:
+  
+  break;
+  case  MID_LEFT:
+  
+  break;
+  case  BUTT_LEFT:
+  
+  break;
+  case  TOP_MIDV:
+  
+  break;
+  case  TOP_LEFT:
+  
+  break;
+  case  MID_RIGHT:
+  
+  break;
+  case  BUTT_MID:
+  
+  break;
+  default:
+       Serial.println("un known command");
+  
+ } 
+  
 }
 
 
