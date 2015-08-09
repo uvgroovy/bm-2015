@@ -104,7 +104,7 @@ void loop() {
     digitalWrite(LEDPIN, HIGH);
     // TODO play something
     
-    work(i)
+    work(i);
     Serial.print("Button pressed: ");
     Serial.println(i);
       
@@ -139,7 +139,7 @@ void work(int index) {
   case  MID_LEFT:
   
   break;
-  case  BUTT_LEFT:
+  case  BUTT_RIGHT:
   
   break;
   case  TOP_MIDV:
