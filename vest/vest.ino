@@ -51,13 +51,23 @@ int tempo = 70;
 Piezo piezo(PIEZO_PIN);
 
 
-#define THRESH 10
+#define THRESH 700
 #define SAMPLES 1000
 
 
 boolean isPressed(CapPin* pin) {
   long total = pin->readPin(SAMPLES);
-  return total > THRESH;
+  bool pressed =  total > THRESH;
+#ifdef DEBUG
+  if (pressed) {
+
+ // Serial.print("thresh is ");
+ // Serial.println(total);
+  
+  }
+#endif
+  
+  return pressed;
 }
 
 
@@ -102,7 +112,7 @@ void setup() {
   Serial.print("Calibrating pin: ");
   Serial.println(i);
 #endif
-    pins[i]->calibratePin(SAMPLES);
+    pins[i]->readPin(SAMPLES);
   }
 
   strip.show(); // Initialize all pixels to 'off'
@@ -115,7 +125,10 @@ void setup() {
   delay(100);  
   piezo.play(329,250);
   delay(150);
-  digitalWrite(LEDPIN,LOW);    
+  digitalWrite(LEDPIN,LOW);
+
+  // magic sleep
+  delay(1000);
 #ifdef DEBUG
   Serial.println("Setup done");
 #endif
@@ -168,7 +181,7 @@ void loop() {
     
   } else if ((currentNote == '\0') && (currentPressed)) {
 #ifdef DEBUG
-  Serial.print("Note OFF");
+  Serial.println("Note OFF");
 #endif
     // key was released (no touch, and it was pressed before)
     currentPressed = false;
