@@ -33,7 +33,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, LED_STRIP_PIN);
 
 
 
-#define THRESH 10
+#define THRESH 100
 #define SAMPLES 1000
 #define LEDPIN 13
 
