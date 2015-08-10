@@ -1,17 +1,18 @@
-#include "Adafruit_NeoPixel.h"
-
-
-#define  DEBUG 1
-#define CASSERT(X) typedef byte STATIC_ASSERT[X?1:-1]
+#include <Adafruit_NeoPixel.h>
 
 #include <CapPin.h>
+#include "Piezo.h"
+
 #include <TimerOne.h>
 
-#define PIEZO_PIN 9
+#define  DEBUG 1
 
-#define LED_STRIP_PIN 5
-#define NUM_PIXELS 8
+#define CASSERT(X) typedef byte STATIC_ASSERT[X?1:-1]
+
 #define LEDPIN 13
+#define PIEZO_PIN 9
+#define NUM_PIXELS 8
+#define LED_STRIP_PIN 5
 
 CapPin cPin_C = CapPin(8);
 CapPin cPin_Cs = CapPin(7);
@@ -47,55 +48,19 @@ byte octaves[sizeof(melody)] = "555555555555555555555";
 int tempo = 70;
 
 
+Piezo piezo(PIEZO_PIN);
+
+
 #define THRESH 10
-
-class Peizo {
-  int m_pin;
-  int m_isOn;
-public:
-  Peizo(int pin) : 
-  m_pin(pin), m_isOn(false) {
-  }
-
-  void start(long frequencyHz) {
-    long periodMicro = 1000000/frequencyHz;
-
-    Timer1.setPeriod(periodMicro);
-    if (!m_isOn) {
-      Timer1.pwm(m_pin, 512);
-      m_isOn = true;
-    }
-  }
-
-  void stop() {
-    m_isOn = false;
-    Timer1.disablePwm(m_pin);  
-  }
+#define SAMPLES 1000
 
 
-  void play(long frequency, long time){
-    start(frequency);
-    delay(time);
-    stop();
-
-  }
-  bool isOn() {
-    return m_isOn;
-  }
-};
-
-Peizo peizo(PIEZO_PIN);
+boolean isPressed(CapPin* pin) {
+  long total = pin->readPin(SAMPLES);
+  return total > THRESH;
+}
 
 
-
-// Parameter 1 = number of pixels in strip
-// Parameter 2 = Arduino pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, LED_STRIP_PIN);
 
 
@@ -116,13 +81,15 @@ uint32_t Wheel(byte WheelPos) {
   }
 }
 
-#define SAMPLES 1000
 
 void setup() {
 #ifdef DEBUG
   Serial.begin(9600);
 #endif
-    Timer1.initialize();
+
+  // initialize timer for the piezo class
+  Timer1.initialize();
+  // init led strip
   strip.begin();
 
   pinMode(LEDPIN, OUTPUT);
@@ -131,7 +98,6 @@ void setup() {
 
 
   for (int i = 0; i < NUM_PINS; ++i) {
-    
 #ifdef DEBUG
   Serial.print("Calibrating pin: ");
   Serial.println(i);
@@ -141,34 +107,19 @@ void setup() {
 
   strip.show(); // Initialize all pixels to 'off'
 
-
+  // three beeps, all ok
   digitalWrite(LEDPIN,HIGH);
-  peizo.play(329,200);
+  piezo.play(329,200);
   delay(100);
-  peizo.play(329,200);
+  piezo.play(329,200);
   delay(100);  
-  peizo.play(329,250);
+  piezo.play(329,250);
   delay(150);
   digitalWrite(LEDPIN,LOW);    
 #ifdef DEBUG
   Serial.println("Setup done");
 #endif
 
-}
-
-
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-    strip.show();
-    delay(wait);
-  }
-}
-
-boolean isPressed(CapPin* pin) {
-  long total = pin->readPin(SAMPLES);
-  return total > THRESH;
 }
 
 int addNote(int noteIndex) {
@@ -209,7 +160,7 @@ void loop() {
     int special = addNote(noteIndex);
     
     if (special == 0) {
-      peizo.start(tones[i]);
+      piezo.start(tones[i]);
     } else {
       doLightShow(special);
     }
@@ -217,13 +168,12 @@ void loop() {
     
   } else if ((currentNote == '\0') && (currentPressed)) {
 #ifdef DEBUG
-  Serial.print("Note OFF index: ");
-  Serial.println(i);
+  Serial.print("Note OFF");
 #endif
     // key was released (no touch, and it was pressed before)
     currentPressed = false;
     noteIndex = -1;
-    peizo.stop();
+    piezo.stop();
     digitalWrite(LEDPIN, LOW);
   }
 
