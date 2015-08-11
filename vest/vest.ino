@@ -33,6 +33,7 @@ CapPin* pins[] = { &cPin_C, &cPin_Cs, &cPin_D, &cPin_Ds, &cPin_E, &cPin_F, &cPin
 byte names[] = {'c', 'C', 'd', 'D', 'e', 'f', 'F', 'g', 'G', 'a', 'A', 'b'};
 // In Hz. x2 for a higher octave
 int tones[]  = {261, 277, 294, 311, 329, 349, 370, 392, 415, 440, 466, 493};
+int octaveExp = 0;
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 const int NUM_PINS = ARRAY_SIZE(pins);
@@ -99,6 +100,8 @@ void setup() {
   pinMode(PIEZO_PIN, OUTPUT);
 
 
+  // read unconnected analog pin
+  randomSeed(analogRead(6));
 
   for (int i = 0; i < NUM_PINS; ++i) {
 #ifdef DEBUG
@@ -138,42 +141,73 @@ void setup() {
 
 typedef void (*Magicfunc)();
 
-char magics[][5] = {{'c','C','C','C','C'},};
-Magicfunc magicfuncs[] = { doMagic1};
+char magics[][5] = {
+  {'c', 'C', 'C', 'C', 'C'},
+  {'c', 'c', 'c', 'c', 'd'},
+  {'d', 'd', 'd', 'd', 'c'},
+};
+Magicfunc magicfuncs[] = { doMagic1, doMagic2, doMagic3};
 
 CASSERT(ARRAY_SIZE(magicfuncs) == ARRAY_SIZE(magics) );
 
-
-void doMagic1() {
- 
-  theaterChaseRainbow(50);
-}
-
-
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-    for (int q=0; q < 3; q++) {
-        for (int i=0; i < strip.numPixels(); i=i+3) {
-          strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-        }
-        strip.show();
-       
-        delay(wait);
-       
-        for (int i=0; i < strip.numPixels(); i=i+3) {
-          strip.setPixelColor(i+q, 0);        //turn every third pixel off
-        }
-    }
+void randomizeStrip() {
+  
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, random(0xFFFFFF));
+      strip.show();
   }
 }
 
-byte melody[] =                "dafcdadcfdacdafcdaagp";
-byte times[sizeof(melody)] =   "221222222222221222228";
-byte octaves[sizeof(melody)] = "555555555555555555555";
+void doMagic1() {
+  byte melody[] =                "dafcdadcfdacdafcdaagp";
+  byte times[sizeof(melody)] =   "221222222222221222228";
+  byte octaves[sizeof(melody)] = "555555555555555555555";
+  const int length = ARRAY_SIZE(melody);
+  int tempo = 200;
 
-int tempo = 70;
+  for (int i = 0; i < length; i++) {
+    randomizeStrip();
+    byte time = times[i] - '0';
+    byte note = melody[i];
+    int freq = 0;
+    int octave = 0;
+    for (int j = 0; j < sizeof(names) / sizeof(names[0]); j++) {
+      if (names[j] == note) {
+        freq = tones[j];
+        octave = octaves[j] - '0' - 5;
+      }
+    }
+
+    if (freq != 0 || note == 'p') {
+
+      if (freq > 0) {
+        if (octave >= 0) {
+          freq <<= octave;
+        } else {
+          freq >>= (-octave);
+        }
+        piezo.start(freq);
+      }
+      delay(tempo * time);
+      piezo.stop();
+    } else {
+      // invalid note!
+    }
+
+  }
+
+
+}
+
+void doMagic2() {
+  octaveExp++;
+}
+
+void doMagic3() {
+  octaveExp--;
+}
+
+
 
 int addNote(char note) {
 
@@ -194,7 +228,7 @@ int addNote(char note) {
   for (int i = 0; i < ARRAY_SIZE(magics); ++i) {
     uint8_t curIndex = (arrEndIndex + 1) % ARRAY_SIZE(arr);
     int j;
-        
+
     for ( j = 0; j < ARRAY_SIZE(arr); ++j) {
       if (magics[i][j] != arr[curIndex]) {
         break;
@@ -202,6 +236,8 @@ int addNote(char note) {
       curIndex = (curIndex + 1) % ARRAY_SIZE(arr);
     }
     if (j == ARRAY_SIZE(arr)) {
+      // magic found, zero array
+      memset(arr, 0, sizeof(arr));
       return i;
     }
 
@@ -219,7 +255,7 @@ int doLightShow(int special) {
   piezo.play(329, 200);
   delay(100);
   piezo.play(329, 250);
-  
+
   magicfuncs[special]();
   return 0;
 }
@@ -263,7 +299,9 @@ void loop() {
       int special = addNote(currentNote);
 
       if (special == -1) {
-        piezo.start(tones[i]);
+
+
+        piezo.start((octaveExp < 0) ? tones[i] >> -octaveExp : tones[i] <<  octaveExp);
       } else {
         doLightShow(special);
       }
