@@ -158,11 +158,9 @@ typedef void (*Magicfunc)();
 
 char magics[][5] = {
   {'c', 'C', 'C', 'C', 'C'},
-  {'c', 'c', 'c', 'c', 'd'},
-  {'d', 'd', 'd', 'd', 'c'},
   {'c', 'd', 'd', 'd', 'd'},
 };
-Magicfunc magicfuncs[] = { doMagic1, doMagic2, doMagic3, doMagic4};
+Magicfunc magicfuncs[] = { doMagic1,  doMagic4};
 
 CASSERT(ARRAY_SIZE(magicfuncs) == ARRAY_SIZE(magics) );
 
@@ -218,14 +216,6 @@ void playStep(byte* melody, byte* times, byte* octaves, int i, int tempo) {
     // invalid note!
   }
 
-}
-
-void doMagic2() {
-  octaveExp++;
-}
-
-void doMagic3() {
-  octaveExp--;
 }
 
 void doMagic4() {
