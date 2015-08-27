@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
 #include "Adafruit_Soundboard.h"
-
+#include "buttons.h"
 #include <CapPin.h>
 //#define USE_SOUNDSBOARD 1
 #define USE_LED 1
@@ -21,6 +21,7 @@
 // we'll be using software serial
 SoftwareSerial ss = SoftwareSerial(SFX_TX, SFX_RX);
 
+#if USE_SOUNDSBOARD
 // pass the software serial to Adafruit_soundboard, the second
 // argument is the debug port (not used really) and the third 
 // arg is the reset pin
@@ -28,7 +29,7 @@ Adafruit_Soundboard sfx = Adafruit_Soundboard(&ss, NULL, SFX_RST);
 // can also try hardware serial with
 // Adafruit_Soundboard sfx = Adafruit_Soundboard(&Serial1, NULL, SFX_RST);
 
-
+#endif
 
 #define ROWS 3
 #define PIXELS_PER_ROW 16
@@ -70,7 +71,7 @@ boolean isPressed(CapPin* pin) {
 char rawPin[][3] = {"2","3","8","9", "10", "11", "12", "A0", "A1", "A2", "A3"};
 #endif
 CapPin pins[] = { CapPin(2), CapPin(3 ), CapPin(8), CapPin(9), CapPin(10), CapPin(11), CapPin(12), CapPin(A0), CapPin(A1), CapPin(A2), CapPin(A3)};
-enum MAPPING    { TOP_RIGHT, BUTT_RIGHT, MID_MID  , ARR_DOWN , ARR_UP    , MID_LEFT  , BUTT_LEFT , TOP_MIDV  ,TOP_LEFT  , MID_RIGHT , BUTT_MID  };
+ 
 //CapPin pins[] = { CapPin(2), CapPin(3)};
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0])) 
@@ -129,8 +130,6 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   testLEDs();
-  testLEDs();
-  testLEDs();
 
 #endif
 }
@@ -170,12 +169,42 @@ void setColor(uint32_t color) {
   strip.show();
 }
 
+
+void setColorForButton(BUTTONS button, int color) {
+  byte start,end;
+  indexesForButton(button, start, end);
+
+  strip.begin();
+  for (int i = start; i <= end; i++) {
+    strip.setPixelColor(i, color);      
+  }
+  strip.show();
+}
 #else
 void setColor(uint32_t color) {
 }
 
 #endif
 
+struct LEDAnimation {
+  BUTTONS _currentButton;
+  byte _startIndex;
+  byte _endIndex;
+
+  LEDAnimation() {
+    _currentButton = BUTTON_NONE;
+  }
+  
+  void start(BUTTONS button) {
+    if (_currentButton) {
+      setColorForButton(_currentButton, 0);
+    }
+
+    _currentButton = button;
+   setColorForButton(button, 0xFF);
+  };
+
+};
 bool currentPressed = false;
 
 void loop() {
@@ -194,8 +223,8 @@ void loop() {
     digitalWrite(LEDPIN, HIGH);
     // TODO play something
     
-    work(i);
-    sfx.playTrack("T00     OGG");
+    work((BUTTONS)(i+1));
+    
     #ifdef DEBUG
     Serial.print("Button pressed: ");
     Serial.print(i);
@@ -213,55 +242,88 @@ void loop() {
   animate();
 }
 
-void work(int index) {
- 
+void work(BUTTONS index) {
+
+ static LEDAnimation d;
+ d.start(index);
  switch(index) {
   case  TOP_RIGHT:
-    setColor(0x000077);
+  break;
   case  TOP_LEFT:
-    setColor(0x0000FF);
   break;
   
   case  TOP_MIDV:
-    setColor(0x0055FF);
-  break;
-  
+  break;  
   case  MID_LEFT:
-    setColor(0x007700);
   break;
   case  MID_MID:
-    setColor(0x55FF00);
   break;
   case  MID_RIGHT:
-    setColor(0x00FF00);
   break;
   case BUTT_LEFT:
-    setColor(0x770000);
-    break;
-
   case  BUTT_RIGHT:
-    setColor(0xFF0000);
-  
   break;
   case  ARR_DOWN:
-  
   break;
   case ARR_UP:
-  
   break;
   case  BUTT_MID:
-    setColor(0xFF0077);
   break;
   default:
        Serial.println("un known command");
   
- } 
-  
+ }   
 }
-
-
-
 
 void animate() {
   
 }
+
+
+
+void indexesForButton(BUTTONS button, byte& start, byte& end) {
+  switch(button) {
+    case TOP_RIGHT:
+      start = 0;
+      end = 3;
+      break;
+    case TOP_MIDV:
+      start = 4;
+      end = 7;
+      break;
+    case TOP_LEFT:
+      start=8;
+      end=12;
+      break;
+    case MID_LEFT:
+      start=18;
+      end=21;
+      break;
+    case MID_MID:
+      start=23;
+      end=25;
+      break;
+    case MID_RIGHT:
+      start=27;
+      end=30;
+      break;
+    case BUTT_RIGHT:
+      start=34;
+      end=36;
+      break;
+    case BUTT_MID:
+      start=37;
+      end=40;
+      break;
+    case BUTT_LEFT:
+      start=42;
+      end=45;
+      break;
+
+  }
+};
+
+
+
+
+
