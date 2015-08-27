@@ -221,6 +221,7 @@ void playStep(byte* melody, byte* times, byte* octaves, int i, int tempo) {
 void doMagic4() {
   // TODO animate
   // 8 pixel
+  
 }
 
 int addNote(char note) {
@@ -317,7 +318,7 @@ void doConfig() {
     //   0    1    2    3    4    5    6    7    8    9   10   11
     // {'c', 'C', 'd', 'D', 'e', 'f', 'F', 'g', 'G', 'a', 'A', 'b'};
     switch (i) {
-      case 1:
+      case 11:
         mute = !mute;
         if (mute) {
           colorWipe(red);
@@ -327,7 +328,7 @@ void doConfig() {
         }
         delay(500);
         break;
-      case 3:
+      case 10:
         lightsoff = !lightsoff;
         if (lightsoff) {
           colorWipe(0);
@@ -381,6 +382,8 @@ void loop() {
 
   if (!lightsoff) {
     animate();
+  } else {
+    colorWipe(0);
   }
 }
 
@@ -450,8 +453,7 @@ void animate() {
   /////////// animate leds
   if (currentNote == '\0') {
     rainbow_step();
-  }
-  else {
+  } else {
 
 #ifdef DEBUG
     boolean bit1 = noteIndex & 1;
@@ -467,16 +469,15 @@ void animate() {
     strip.setPixelColor(4, bit2 ? red : blu);
     strip.setPixelColor(5, bit3 ? red : blu);
     strip.setPixelColor(6, bit4 ? red : blu);
+    strip.show();
 
 #else
     uint32_t color = noteToColor(noteIndex);
-    for (uint16_t i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, color);
-    }
+    colorWipe(color);
+    
 #endif
 
   }
-  strip.show();
 }
 
 uint32_t noteToColor(int i) {
@@ -486,8 +487,10 @@ uint32_t noteToColor(int i) {
 
 void rainbow_step() {
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, Wheel((i + stepIndex) & 255));
+    strip.setPixelColor(i, Wheel((i*10 + stepIndex) & 0xFF ));
   }
+  strip.show();
+
 }
 
 
