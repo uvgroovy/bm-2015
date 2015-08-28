@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 from buttons import Buttons
+from leds import LEDS
 
 STOP_PLAYING_THRESHOLD = 60
 
@@ -12,9 +13,12 @@ class Drums(object):
     def __init__(self):
         print 'Starting up drums!'
         self._buttons = Buttons()
+        self._led = LEDS()
         self._sequenceQueue = []
         self._play = False
         self._last_key_time = datetime.now()
+
+        self._led.test()
 
     def run(self):
         while True:
@@ -40,7 +44,11 @@ class Drums(object):
 
     def _process_key(self, key):
         print 'processing key %s' % key
+        self._led.set_color_for_button(key, 0xFF)
+
+
 drums = Drums()
+
 drums.run()
 
 

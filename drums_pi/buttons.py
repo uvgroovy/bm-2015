@@ -29,7 +29,7 @@ class Buttons(object):
 
     def key_string(self, keycode):
         return {
-            self.BUTTON_NO: 'BUTTON_NONE',
+            self.BUTTON_NONE: 'BUTTON_NONE',
             self.TOP_RIGHT: 'TOP_RIGHT',
             self.BUTT_RIGHT: 'BUTT_RIGHT',
             self.MID_MID: 'MID_MID',
